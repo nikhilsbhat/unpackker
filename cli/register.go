@@ -26,19 +26,19 @@ func SetUnpackkerCmds() *cobra.Command {
 
 func getUnpackkerCmds() *cobra.Command {
 
-	var terragenCmd = &cobra.Command{
-		Use:   "terragen [command]",
-		Short: "Command to create files/folder for terraform provider",
-		Long:  `Terragen helps user to create custom terraform provider by generating templates for it.`,
+	var unpackkerCmd = &cobra.Command{
+		Use:   "unpackker [command]",
+		Short: "Command creates and ship the asset",
+		Long:  `unpackker helps user to pack the asset that could be shipped later.`,
 		Args:  cobra.MinimumNArgs(1),
-		RunE:  cm.echoTerragen,
+		RunE:  cm.echoUnpackker,
 	}
-	terragenCmd.SetUsageTemplate(getUsageTemplate())
+	unpackkerCmd.SetUsageTemplate(getUsageTemplate())
 
 	var setCmd = &cobra.Command{
 		Use:          "generate [flags]",
-		Short:        "Command to generate the initial components for terraform provider",
-		Long:         `This will help user to generate the initial components of terraform provider.`,
+		Short:        "Command to generate package of the specified asset",
+		Long:         `This will help user to generate package of the specified asset.`,
 		Run:          unpcker.Packer,
 		SilenceUsage: true,
 	}
@@ -46,18 +46,18 @@ func getUnpackkerCmds() *cobra.Command {
 	// fetching "version" will be done here.
 	var versionCmd = &cobra.Command{
 		Use:   "version [flags]",
-		Short: "Command to fetch the version of terragen installed",
-		Long:  `This will help user to find what version of terragen he/she installed in her machine.`,
+		Short: "Command to fetch the version of unpackker installed",
+		Long:  `This will help user to find what version of unpackker he/she installed in her machine.`,
 		RunE:  versionConfig,
 	}
 
-	terragenCmd.AddCommand(setCmd)
-	terragenCmd.AddCommand(versionCmd)
-	registerFlags(terragenCmd)
-	return terragenCmd
+	unpackkerCmd.AddCommand(setCmd)
+	unpackkerCmd.AddCommand(versionCmd)
+	registerFlags(unpackkerCmd)
+	return unpackkerCmd
 }
 
-func (cm *cliMeta) echoTerragen(cmd *cobra.Command, args []string) error {
+func (cm *cliMeta) echoUnpackker(cmd *cobra.Command, args []string) error {
 	if err := cmd.Usage(); err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func (cm *cliMeta) echoTerragen(cmd *cobra.Command, args []string) error {
 }
 
 func versionConfig(cmd *cobra.Command, args []string) error {
-	fmt.Println("terragen", version.GetVersion())
+	fmt.Println("unpackker", version.GetVersion())
 	return nil
 }
 

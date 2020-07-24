@@ -1,4 +1,4 @@
-// Package cli will initialize cli of terragen.
+// Package cli will initialize cli of unpackker.
 package cli
 
 import (

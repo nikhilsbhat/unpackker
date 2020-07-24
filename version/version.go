@@ -1,4 +1,4 @@
-// Package version powers the versioning of terragen.
+// Package version powers the versioning of packer/packer.go.
 package version
 
 import (
