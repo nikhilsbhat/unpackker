@@ -16,10 +16,6 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	tempPath = "."
-)
-
 //UnpackkerInput holds the required values to generate the templates
 type UnpackkerInput struct {
 	// The name of the asset client stub.
@@ -39,28 +35,10 @@ type UnpackkerInput struct {
 // Packer packs the asset which would be understood by unpacker
 func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
 
-	if len(i.AssetVersion) == 0 {
-		i.AssetVersion = "1.0"
-	}
-
-	i.Path = i.getPath()
-	i.TempPath = i.getTempPath()
-
-	if i.tempPathExists() {
-		fmt.Println(ui.Error(fmt.Sprintf("Looks like Unpackker was exited abruptly which left behind few traces at %s\nIt has to be cleared manually for now", i.TempPath)))
-		os.Exit(1)
-	}
-
-	if err := i.createTempPath(); err != nil {
+	if err := i.validate(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 		os.Exit(1)
 	}
-
-	if !(i.assetExists()) {
-		fmt.Println(ui.Error(fmt.Sprintf("Could not find the asset here %s, either user does not permission or wrong path specified\n", i.AssetPath)))
-		os.Exit(1)
-	}
-
 	genin := new(gen.GenInput)
 	genin.Package = i.Name
 	genin.Path = i.TempPath
@@ -94,6 +72,32 @@ func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
 	fmt.Println(ui.Info("Asset is packed successfully\n"))
 }
 
+func (i *UnpackkerInput) validate() error {
+	if len(i.AssetVersion) == 0 {
+		i.AssetVersion = "1.0"
+	}
+
+	if len(i.Environment) == 0 {
+		i.Environment = "development"
+	}
+
+	i.Path = i.getPath()
+	i.TempPath = i.getTempPath()
+
+	if i.tempPathExists() {
+		return fmt.Errorf(fmt.Sprintf("Looks like Unpackker was exited abruptly which left behind few traces at %s\nIt has to be cleared manually for now", i.TempPath))
+	}
+
+	if err := i.createTempPath(); err != nil {
+		return fmt.Errorf(decode.GetStringOfMessage(err))
+	}
+
+	if !(i.assetExists()) {
+		return fmt.Errorf(fmt.Sprintf("Could not find the asset here %s, either user does not permission or wrong path specified\n", i.AssetPath))
+	}
+	return nil
+}
+
 func (i *UnpackkerInput) setupAssetDir() error {
 	goInit := exec.Command("go", "mod", "init", i.Name)
 	goInit.Dir = i.clinetStubPath
@@ -110,7 +114,11 @@ func (i *UnpackkerInput) setupAssetDir() error {
 }
 
 func (i *UnpackkerInput) packAsset() error {
-	goBuild := exec.Command("go", "build", "-o", fmt.Sprintf("%s/%s", i.Path, i.Name), "-ldflags", "-s -w")
+	buildPath, err := filepath.Abs(fmt.Sprintf("%s/%s", i.Path, i.Name))
+	if err != nil {
+		return err
+	}
+	goBuild := exec.Command("go", "build", "-o", buildPath, "-ldflags", "-s -w")
 	goBuild.Dir = i.clinetStubPath
 
 	if err := goBuild.Run(); err != nil {

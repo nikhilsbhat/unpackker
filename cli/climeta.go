@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/nikhilsbhat/neuron/cli/ui"
 	"os"
+
+	"github.com/nikhilsbhat/neuron/cli/ui"
 )
 
 type cliMeta struct {
