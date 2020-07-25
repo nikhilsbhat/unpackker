@@ -12,7 +12,8 @@ import (
 	"github.com/go-bindata/go-bindata/v3"
 	"github.com/nikhilsbhat/neuron/cli/ui"
 	"github.com/nikhilsbhat/terragen/decode"
-	gen "github.com/nikhilsbhat/unpackker/gen"
+	"github.com/nikhilsbhat/unpackker/pkg/backend"
+	gen "github.com/nikhilsbhat/unpackker/pkg/gen"
 	"github.com/spf13/cobra"
 )
 
@@ -25,7 +26,9 @@ type UnpackkerInput struct {
 	// Path to asset which has to be packed.
 	AssetPath string
 	// AssetVersion refers to version of asset which has to eb packed.
-	AssetVersion   string
+	AssetVersion string
+	// Backend for the asset generated.
+	Backend        *backend.Store
 	clinetStubPath string
 	gen.GenInput
 	writer   io.Writer
@@ -34,7 +37,6 @@ type UnpackkerInput struct {
 
 // Packer packs the asset which would be understood by unpacker
 func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
-
 	if err := i.validate(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 		os.Exit(1)
@@ -73,16 +75,8 @@ func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
 }
 
 func (i *UnpackkerInput) validate() error {
-	if len(i.AssetVersion) == 0 {
-		i.AssetVersion = "1.0"
-	}
-
-	if len(i.Environment) == 0 {
-		i.Environment = "development"
-	}
-
 	i.Path = i.getPath()
-	i.TempPath = i.getTempPath()
+	i.TempPath = i.getTempPath() + "_temp"
 
 	if i.tempPathExists() {
 		return fmt.Errorf(fmt.Sprintf("Looks like Unpackker was exited abruptly which left behind few traces at %s\nIt has to be cleared manually for now", i.TempPath))
@@ -114,7 +108,7 @@ func (i *UnpackkerInput) setupAssetDir() error {
 }
 
 func (i *UnpackkerInput) packAsset() error {
-	buildPath, err := filepath.Abs(fmt.Sprintf("%s/%s", i.Path, i.Name))
+	buildPath, err := filepath.Abs(fmt.Sprintf("%s/%s", i.Path, i.nameForTemp()))
 	if err != nil {
 		return err
 	}

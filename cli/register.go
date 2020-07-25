@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/nikhilsbhat/unpackker/packer"
+	"github.com/nikhilsbhat/unpackker/pkg/packer"
 	"github.com/nikhilsbhat/unpackker/version"
 	"github.com/spf13/cobra"
 )
