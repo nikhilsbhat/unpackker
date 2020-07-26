@@ -10,8 +10,7 @@ import (
 
 var (
 	cmds    map[string]*cobra.Command
-	unpcker packer.UnpackkerInput
-	// genin   gen.GenInput
+	unpcker = packer.NewConfig()
 )
 
 type confcmds struct {

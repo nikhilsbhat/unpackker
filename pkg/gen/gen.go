@@ -17,12 +17,12 @@ import (
 //GenInput holds the required values to generate the templates
 type GenInput struct {
 	// The name of the asset client stub.
-	Package string
+	Package string `json:"package" yaml:"package"`
 	// Path defines where the templates has to be generated.
-	Path        string
-	Environment string
-	//AssetName    string
-	AssetVersion string
+	Path        string `json:"path" yaml:"path"`
+	Environment string `json:"environment" yaml:"environment"`
+	// AssetVersion refers to version of asset which has to eb packed.
+	AssetVersion string `json:"assetversion" yaml:"assetversion"`
 	// TemplateRaw consists of go-templates which are required for generation of client stub.
 	TemplateRaw UnpackkerTemplate
 	// AutoGenMessage will be configured by unpackker and cannot be overwritten.
@@ -309,7 +309,7 @@ func (i *GenInput) Generate() (string, error) {
 	i.template = fmt.Sprintf("unpackker-client-stub-%s", i.Package)
 	i.AutoGenMessage = autoGenMessage
 	if i.clinetStubExists() {
-		return "", fmt.Errorf(fmt.Sprintf("Looks like clinet stub %s was created earlier in the location %s\n", i.template, i.Path))
+		return "", fmt.Errorf("Looks like clinet stub %s was created earlier in the location %s", i.template, i.Path)
 	}
 
 	// Generating the ClientStub for asset ex: unpackker-client-stub-demo
