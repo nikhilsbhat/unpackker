@@ -182,7 +182,7 @@ func getPackkerCmd() *cobra.Command {
 	}
 	// packkerCmd.SetUsageTemplate(getUsageTemplate())
 
-	var setCmd = &cobra.Command{
+	var genCmd = &cobra.Command{
 		Use:          "generate [flags]",
 		Short:        "Command to generate the asset on to specified folder",
 		Run:          genin.generate,
@@ -196,9 +196,11 @@ func getPackkerCmd() *cobra.Command {
 		RunE:  genin.versionConfig,
 	}
 
-	packkerCmd.AddCommand(setCmd)
+	genCmd.Hidden = true
+	versionCmd.Hidden = true
+	registerFlags(genCmd)
+	packkerCmd.AddCommand(genCmd)
 	packkerCmd.AddCommand(versionCmd)
-	registerFlags(packkerCmd)
 	return packkerCmd
 }
 

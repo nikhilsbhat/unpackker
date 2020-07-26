@@ -14,8 +14,8 @@ var (
 	configFileName = "unpackker-config"
 )
 
-// LoadConfig will load config from file `unpackker-config` onto UnpackkerInput.
-func (i *UnpackkerInput) LoadConfig() (*UnpackkerInput, error) {
+// LoadConfig will load config from file `unpackker-config` onto PackkerInput.
+func (i *PackkerInput) LoadConfig() (*PackkerInput, error) {
 	if err := i.getConfig(); err != nil {
 		return nil, err
 	}
@@ -32,7 +32,7 @@ func (i *UnpackkerInput) LoadConfig() (*UnpackkerInput, error) {
 	return newConfig, nil
 }
 
-func (i *UnpackkerInput) getConfig() error {
+func (i *PackkerInput) getConfig() error {
 	// Environment variable for config path is set to take higher precedence.
 	if len(os.Getenv("UNPACKKER_CONFIG")) != 0 {
 		i.ConfigPath = os.Getenv("UNPACKKER_CONFIG")
@@ -44,7 +44,6 @@ func (i *UnpackkerInput) getConfig() error {
 			return err
 		}
 		configPath, configexists := mapConfigFile(filepath.Join(configDir, "."+configFileName))
-		fmt.Println(configPath)
 		if !configexists {
 			return fmt.Errorf("could not find the cofig file in the current cirectory")
 		}
@@ -69,7 +68,7 @@ func (i *UnpackkerInput) getConfig() error {
 	return nil
 }
 
-func decodeConfig(rawConfig []byte, filetype string) (*UnpackkerInput, error) {
+func decodeConfig(rawConfig []byte, filetype string) (*PackkerInput, error) {
 	config := NewConfig()
 
 	if (filetype == ".yaml") || (filetype == ".yml") {

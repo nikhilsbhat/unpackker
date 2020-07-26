@@ -18,8 +18,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
-//UnpackkerInput holds the required values to generate the templates
-type UnpackkerInput struct {
+//PackkerInput holds the required fields to pack the asset.
+type PackkerInput struct {
 	// The name of the asset client stub.
 	Name string `json:"name" yaml:"name"`
 	// TempPath would be used to carryout all the operation of Unpackker defaults to PWD.
@@ -36,21 +36,21 @@ type UnpackkerInput struct {
 	Backend *backend.Store `json:"backend" yaml:"backend"`
 	// ConfigPath refers to file path where the config file lies, defaults to PWD.
 	ConfigPath string `json:"configpath" yaml:"configpath"`
-	// TargetPath refers to path where the packed asset has to be placed.
-	TargetPath     string
+	// targetPath refers to path where the packed asset has to be placed.
+	targetPath     string
 	clinetStubPath string
 	gen.GenInput
 	writer   io.Writer
 	template string
 }
 
-// NewConfig retunrns new config of UnpackkerInput.
-func NewConfig() *UnpackkerInput {
-	return &UnpackkerInput{}
+// NewConfig retunrns new config of PackkerInput.
+func NewConfig() *PackkerInput {
+	return &PackkerInput{}
 }
 
 // Packer packs the asset which would be understood by unpacker
-func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
+func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 	configFromFile, err := i.LoadConfig()
 	if err != nil {
 		fmt.Println(ui.Warn(decode.GetStringOfMessage(err) + "\n"))
@@ -69,6 +69,7 @@ func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
 
 	if err := configFromFile.validate(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		configFromFile.cleanMess()
 		os.Exit(1)
 	}
 
@@ -81,12 +82,14 @@ func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
 	clientStub, err := genin.Generate()
 	if err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		configFromFile.cleanMess()
 		os.Exit(1)
 	}
 
 	configFromFile.clinetStubPath = filepath.Join(configFromFile.TempPath, clientStub)
 	if err := configFromFile.buildAsset(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		configFromFile.cleanMess()
 		os.Exit(1)
 	}
 
@@ -94,26 +97,40 @@ func (i *UnpackkerInput) Packer(cmd *cobra.Command, args []string) {
 	fmt.Println(ui.Info("Unpackker is in the process of packing asset\n"))
 	if err := configFromFile.setupAssetDir(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		configFromFile.cleanMess()
 		os.Exit(1)
 	}
 
 	fmt.Println(ui.Info("Prerequisites for Asset packing is completed successfully\n"))
+
+	// targetPath, err := filepath.Abs(fmt.Sprintf("%s/%s", path.Dir(configFromFile.TempPath), configFromFile.nameForTemp()))
+	// if err != nil {
+	// 	fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+	// 	os.Exit(1)
+	// }
+
+	// configFromFile.Backend.Path = targetPath
+	// if err := configFromFile.initBackend(); err != nil {
+	// 	fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+	// 	os.Exit(1)
+	// }
+
+	if err := configFromFile.storeAsset(); err != nil {
+		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		configFromFile.cleanMess()
+		os.Exit(1)
+	}
+
 	if err := configFromFile.packAsset(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		configFromFile.cleanMess()
 		os.Exit(1)
 	}
-
 	fmt.Println(ui.Info("Asset was packed successfully\n"))
-	fmt.Println(ui.Info("Cleaning the mess created while packing the asset\n"))
-
-	if err := configFromFile.cleanMess(); err != nil {
-		fmt.Println(ui.Error(fmt.Sprintf("Oops..! an error occured while cleaning the mess at %s, you have to clear it before next run", i.TempPath)))
-		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
-		os.Exit(1)
-	}
+	configFromFile.cleanMess()
 }
 
-func (i *UnpackkerInput) validate() error {
+func (i *PackkerInput) validate() error {
 	i.generateDefaults()
 	i.Path = i.getPath()
 	i.TempPath = i.getTempPath() + "_temp"
@@ -129,10 +146,41 @@ func (i *UnpackkerInput) validate() error {
 	if !(i.assetExists()) {
 		return fmt.Errorf("Could not find the asset here %s, either user does not permission or wrong path specified", i.AssetPath)
 	}
+
+	targetPath, err := filepath.Abs(fmt.Sprintf("%s/%s", path.Dir(i.TempPath), i.nameForTemp()))
+	if err != nil {
+		return err
+	}
+
+	i.Backend.Path = targetPath
+	if err := i.initBackend(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (i *UnpackkerInput) generateDefaults() {
+func (i *PackkerInput) initBackend() error {
+	if err := i.Backend.Backend(); err != nil {
+		return err
+	}
+	if len(i.Backend.Path) == 0 {
+		i.Backend.Path = i.targetPath
+	}
+	return nil
+}
+
+func (i *PackkerInput) storeAsset() error {
+	if i.Backend.Type == "fs" {
+		return nil
+	}
+	if err := i.Backend.StoreAsset(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (i *PackkerInput) generateDefaults() {
 	if len(i.Path) == 0 {
 		i.Path = "."
 	}
@@ -147,7 +195,7 @@ func (i *UnpackkerInput) generateDefaults() {
 	}
 }
 
-func (i *UnpackkerInput) setupAssetDir() error {
+func (i *PackkerInput) setupAssetDir() error {
 	goInit := exec.Command("go", "mod", "init", i.Name)
 	goInit.Dir = i.clinetStubPath
 	if err := goInit.Run(); err != nil {
@@ -162,12 +210,8 @@ func (i *UnpackkerInput) setupAssetDir() error {
 	return nil
 }
 
-func (i *UnpackkerInput) packAsset() error {
-	buildPath, err := filepath.Abs(fmt.Sprintf("%s/%s", path.Dir(i.TempPath), i.nameForTemp()))
-	if err != nil {
-		return err
-	}
-	goBuild := exec.Command("go", "build", "-o", buildPath, "-ldflags", "-s -w")
+func (i *PackkerInput) packAsset() error {
+	goBuild := exec.Command("go", "build", "-o", i.Backend.Path, "-ldflags", "-s -w")
 	goBuild.Dir = i.clinetStubPath
 
 	if err := goBuild.Run(); err != nil {
@@ -176,7 +220,7 @@ func (i *UnpackkerInput) packAsset() error {
 	return nil
 }
 
-func (i *UnpackkerInput) getPath() string {
+func (i *PackkerInput) getPath() string {
 	if i.Path == "." {
 		dir, err := os.Getwd()
 		if err != nil {
@@ -193,7 +237,7 @@ func (i *UnpackkerInput) getPath() string {
 	return unpath
 }
 
-func (i *UnpackkerInput) getTempPath() string {
+func (i *PackkerInput) getTempPath() string {
 	if i.Path == "." {
 		dir, err := os.Getwd()
 		if err != nil {
@@ -205,12 +249,12 @@ func (i *UnpackkerInput) getTempPath() string {
 	return filepath.Join(i.Path, i.nameForTemp())
 }
 
-func (i *UnpackkerInput) nameForTemp() string {
+func (i *PackkerInput) nameForTemp() string {
 	res := strings.ReplaceAll(i.AssetVersion, ".", "_")
 	return fmt.Sprintf("%s_%s", i.Name, res)
 }
 
-func (i *UnpackkerInput) createTempPath() error {
+func (i *PackkerInput) createTempPath() error {
 	err := os.MkdirAll(i.TempPath, 0777)
 	if err != nil {
 		return err
@@ -218,21 +262,21 @@ func (i *UnpackkerInput) createTempPath() error {
 	return nil
 }
 
-func (i *UnpackkerInput) assetExists() bool {
+func (i *PackkerInput) assetExists() bool {
 	if _, direrr := os.Stat(i.AssetPath); os.IsNotExist(direrr) {
 		return false
 	}
 	return true
 }
 
-func (i *UnpackkerInput) tempPathExists() bool {
+func (i *PackkerInput) tempPathExists() bool {
 	if _, direrr := os.Stat(i.TempPath); os.IsNotExist(direrr) {
 		return false
 	}
 	return true
 }
 
-func (i *UnpackkerInput) buildAsset() error {
+func (i *PackkerInput) buildAsset() error {
 	cfg := bindata.NewConfig()
 
 	cfg.Prefix = splitBasePath(i.AssetPath, "base")
@@ -252,12 +296,15 @@ func (i *UnpackkerInput) buildAsset() error {
 	return nil
 }
 
-func (i *UnpackkerInput) cleanMess() error {
+func (i *PackkerInput) cleanMess() {
+	fmt.Println(ui.Info("Cleaning the mess created while packing the asset\n"))
 	err := os.RemoveAll(i.TempPath)
 	if err != nil {
-		return err
+		fmt.Println(ui.Error(fmt.Sprintf("Oops..! an error occured while cleaning the mess at %s, you have to clear it before next run", i.TempPath)))
+		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		os.Exit(1)
 	}
-	return nil
+	fmt.Println(ui.Info("All files and folders created by Unpaccker in the process of packing asset was cleared\n"))
 }
 
 func splitBasePath(path string, pathType ...string) string {
