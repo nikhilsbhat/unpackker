@@ -56,8 +56,15 @@ func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 		fmt.Println(ui.Warn("Switching to default config"))
 	}
 
-	if err := mergo.Merge(configFromFile, i, mergo.WithOverride); err != nil {
-		os.Exit(1)
+	if configFromFile != nil {
+		if err := mergo.Merge(configFromFile, i, mergo.WithOverride); err != nil {
+			fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+			os.Exit(1)
+		}
+	}
+
+	if configFromFile == nil {
+		configFromFile = i
 	}
 
 	if err := configFromFile.validate(); err != nil {
@@ -132,8 +139,8 @@ func (i *PackkerInput) validate() error {
 	if err != nil {
 		return err
 	}
+	i.targetPath = targetPath
 
-	i.Backend.TargetPath = targetPath
 	if err := i.initBackend(); err != nil {
 		return err
 	}
@@ -173,6 +180,11 @@ func (i *PackkerInput) generateDefaults() {
 	}
 	if len(i.AssetVersion) == 0 {
 		i.AssetVersion = "1.0"
+	}
+	if i.Backend == nil {
+		newbackend := backend.New()
+		newbackend.Type = "fs"
+		i.Backend = newbackend
 	}
 }
 

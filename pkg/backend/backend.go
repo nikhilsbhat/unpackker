@@ -13,7 +13,7 @@ type Store struct {
 	// Name the Bucket in appropriate cloud for artifact store.
 	Bucket string `json:"bucket" yaml:"bucket"`
 	// Path where the asset has to be fetched to.
-	TargetPath string `json:"TargetPath" yaml:"TargetPath"`
+	TargetPath string `json:"targetpath" yaml:"targetpath"`
 }
 
 // New retunrns new config of Store.

@@ -1,6 +1,7 @@
 GOFMT_FILES?=$$(find . -not -path "./vendor/*" -type f -name '*.go')
-APP_NAME?=unpackker
+PROJECT_NAME?=unpackker
 APP_DIR?=$$(git rev-parse --show-toplevel)
+VERSION?=0.1
 DEV?=${DEVBOX_TRUE}
 
 .PHONY: help
@@ -15,15 +16,12 @@ local.check: local.fmt ## Loads all the dependencies to vendor directory
 	go mod tidy
 
 local.build: local.check ## Generates the artifact with the help of 'go build'
-	go build -o $(APP_NAME) -ldflags="-s -w"
+	go build -o $(PROJECT_NAME) -ldflags="-s -w"
 
 local.push: local.build ## Pushes built artifact to the specified location
 
 local.run: local.build ## Generates the artifact and start the service in the current directory
-	./${APP_NAME}
-
-local.clean: ## Cleans directory from all built binary and other artifacts
-	rm -rf $(APP_NAME) compose.db
+	./${PROJECT_NAME}
 
 dockerise: local.check ## Containerise the appliction
 	docker build . --tag ${DOCKER_USER}/${PROJECT_NAME}:${VERSION}
