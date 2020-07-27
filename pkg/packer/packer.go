@@ -1,3 +1,4 @@
+// Package packer handles the process of packaging asset with the support of supporting library.
 package packer
 
 import (

@@ -1,3 +1,4 @@
+// Package unexec is a thin wrapper around os/exec to support Unpackker.
 package unexec
 
 import (

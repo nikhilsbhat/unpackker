@@ -1,3 +1,4 @@
+// Package backend is responsible for storing and fetching asset from or to the designated location.
 package backend
 
 import (

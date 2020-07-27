@@ -1,3 +1,4 @@
+// Package helper consists of supporting libraries for Unpackker.
 package helper
 
 import (

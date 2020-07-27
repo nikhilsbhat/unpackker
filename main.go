@@ -1,4 +1,4 @@
-// Package main initializes the cli of terragen
+// Package main initializes the cli of unpackker
 package main
 
 import (

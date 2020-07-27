@@ -1,3 +1,4 @@
+// Package unpacker would work more like a client library by helping one in unwrapping the assert packed by packer.
 package unpacker
 
 import (

@@ -1,4 +1,4 @@
-// Package gen is the core of UnPackker, where the template generation happens.
+// Package gen is the core of Unpackker, where the template generation happens.
 package gen
 
 import (
