@@ -1,0 +1,11 @@
+---
+name: compose
+tempath: test/
+path: testing
+assetpath: /Users/nikhil.bhat/my-opensource/vue/sampleapp/dist
+assetversion: "1.1"
+environment: "production"
+#configpath: ~/vue/sampleapp/dist
+backend:
+  type: fs
+  bucket: ~/my-opensource/project-packer
