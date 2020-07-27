@@ -15,6 +15,7 @@ import (
 	"github.com/nikhilsbhat/terragen/decode"
 	"github.com/nikhilsbhat/unpackker/pkg/backend"
 	gen "github.com/nikhilsbhat/unpackker/pkg/gen"
+	"github.com/nikhilsbhat/unpackker/pkg/helper"
 	"github.com/spf13/cobra"
 )
 
@@ -152,7 +153,7 @@ func (i *PackkerInput) validate() error {
 		return err
 	}
 
-	i.Backend.Path = targetPath
+	i.Backend.TargetPath = targetPath
 	if err := i.initBackend(); err != nil {
 		return err
 	}
@@ -164,16 +165,13 @@ func (i *PackkerInput) initBackend() error {
 	if err := i.Backend.Backend(); err != nil {
 		return err
 	}
-	if len(i.Backend.Path) == 0 {
-		i.Backend.Path = i.targetPath
+	if len(i.Backend.TargetPath) == 0 {
+		i.Backend.TargetPath = i.targetPath
 	}
 	return nil
 }
 
 func (i *PackkerInput) storeAsset() error {
-	if i.Backend.Type == "fs" {
-		return nil
-	}
 	if err := i.Backend.StoreAsset(); err != nil {
 		return err
 	}
@@ -193,6 +191,9 @@ func (i *PackkerInput) generateDefaults() {
 	if len(i.Name) == 0 {
 		i.Name = "demo"
 	}
+	if len(i.AssetVersion) == 0 {
+		i.AssetVersion = "1.0"
+	}
 }
 
 func (i *PackkerInput) setupAssetDir() error {
@@ -211,7 +212,7 @@ func (i *PackkerInput) setupAssetDir() error {
 }
 
 func (i *PackkerInput) packAsset() error {
-	goBuild := exec.Command("go", "build", "-o", i.Backend.Path, "-ldflags", "-s -w")
+	goBuild := exec.Command("go", "build", "-o", i.Backend.TargetPath, "-ldflags", "-s -w")
 	goBuild.Dir = i.clinetStubPath
 
 	if err := goBuild.Run(); err != nil {
@@ -279,8 +280,8 @@ func (i *PackkerInput) tempPathExists() bool {
 func (i *PackkerInput) buildAsset() error {
 	cfg := bindata.NewConfig()
 
-	cfg.Prefix = splitBasePath(i.AssetPath, "base")
-	cfg.Output = filepath.Join(i.clinetStubPath, i.Name, splitBasePath(i.clinetStubPath)+".go")
+	cfg.Prefix = helper.SplitBasePath(i.AssetPath, "base")
+	cfg.Output = filepath.Join(i.clinetStubPath, i.Name, helper.SplitBasePath(i.clinetStubPath)+".go")
 	cfg.Package = i.Name
 	cfg.HttpFileSystem = true
 
@@ -305,12 +306,4 @@ func (i *PackkerInput) cleanMess() {
 		os.Exit(1)
 	}
 	fmt.Println(ui.Info("All files and folders created by Unpaccker in the process of packing asset was cleared\n"))
-}
-
-func splitBasePath(path string, pathType ...string) string {
-	dir, filepath := filepath.Split(path)
-	if len(pathType) == 0 {
-		return filepath
-	}
-	return dir
 }

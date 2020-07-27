@@ -130,7 +130,11 @@ func registerFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&genin.assetName, "name", "n", "{{ .Package }}", "name of the asset that needs to be unpacked")
 	cmd.PersistentFlags().StringVarP(&genin.path, "path", "p", ".", "path where the asset has to be unpacked")
 	cmd.PersistentFlags().BoolVarP(&genin.silent, "silent", "s", false, "silence the output to get more speccific output")
-}`
+}
+func registerVersionFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().BoolVarP(&genin.silent, "silent", "s", false, "silence the output to get more speccific output")
+}
+`
 
 var registerTemp = `{{ .AutoGenMessage }}
 package {{ .Package }}
@@ -176,7 +180,7 @@ func getPackkerCmd() *cobra.Command {
 
 	var packkerCmd = &cobra.Command{
 		Use:   "unpackker [command]",
-		Short: "Mode of asset packing using client stub",
+		Short: "Mode of asset unpacking using client stub",
 		// Args:  cobra.MinimumNArgs(1),
 		RunE: cm.echoPackker,
 	}
@@ -199,6 +203,7 @@ func getPackkerCmd() *cobra.Command {
 	genCmd.Hidden = true
 	versionCmd.Hidden = true
 	registerFlags(genCmd)
+	registerVersionFlags(versionCmd)
 	packkerCmd.AddCommand(genCmd)
 	packkerCmd.AddCommand(versionCmd)
 	return packkerCmd

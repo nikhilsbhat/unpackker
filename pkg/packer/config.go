@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/nikhilsbhat/config/decode"
+	"github.com/nikhilsbhat/unpackker/pkg/helper"
 	"gopkg.in/yaml.v2"
 )
 
@@ -60,7 +61,7 @@ func (i *PackkerInput) getConfig() error {
 		return fmt.Errorf("config file format not supported, supported types are: %s", configPathExt)
 	}
 
-	if !statfile(configPath) {
+	if !helper.Statfile(configPath) {
 		return fmt.Errorf("config file %s was not found", configPath)
 	}
 
@@ -88,7 +89,7 @@ func decodeConfig(rawConfig []byte, filetype string) (*PackkerInput, error) {
 
 func mapConfigFile(filePath string) (string, bool) {
 	for _, ext := range configPathExt {
-		if statfile(filePath + ext) {
+		if helper.Statfile(filePath + ext) {
 			return (filePath + ext), true
 		}
 	}
@@ -100,13 +101,6 @@ func validateConfigExt(configFile string) bool {
 		if filepath.Ext(configFile) == ext {
 			return true
 		}
-	}
-	return false
-}
-
-func statfile(path string) bool {
-	if _, err := os.Stat(path); err == nil {
-		return true
 	}
 	return false
 }
