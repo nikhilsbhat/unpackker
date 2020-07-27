@@ -2,7 +2,6 @@ package packer
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"path"
@@ -41,8 +40,7 @@ type PackkerInput struct {
 	targetPath     string
 	clinetStubPath string
 	gen.GenInput
-	writer   io.Writer
-	template string
+	// writer   io.Writer
 }
 
 // NewConfig retunrns new config of PackkerInput.
@@ -57,12 +55,6 @@ func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 		fmt.Println(ui.Warn(decode.GetStringOfMessage(err) + "\n"))
 		fmt.Println(ui.Warn("Switching to default config"))
 	}
-
-	// bi, err := json.MarshalIndent(configFromFile, "", " ")
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-	// fmt.Println(string(bi))
 
 	if err := mergo.Merge(configFromFile, i, mergo.WithOverride); err != nil {
 		os.Exit(1)
@@ -104,18 +96,6 @@ func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 
 	fmt.Println(ui.Info("Prerequisites for Asset packing is completed successfully\n"))
 
-	// targetPath, err := filepath.Abs(fmt.Sprintf("%s/%s", path.Dir(configFromFile.TempPath), configFromFile.nameForTemp()))
-	// if err != nil {
-	// 	fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
-	// 	os.Exit(1)
-	// }
-
-	// configFromFile.Backend.Path = targetPath
-	// if err := configFromFile.initBackend(); err != nil {
-	// 	fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
-	// 	os.Exit(1)
-	// }
-
 	if err := configFromFile.storeAsset(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 		configFromFile.cleanMess()
@@ -137,7 +117,7 @@ func (i *PackkerInput) validate() error {
 	i.TempPath = i.getTempPath() + "_temp"
 
 	if i.tempPathExists() {
-		return fmt.Errorf("Looks like Unpackker was exited abruptly which left behind few traces at %s\nIt has to be cleared manually for now", i.TempPath)
+		return fmt.Errorf("looks like Unpackker was exited abruptly which left behind few traces at %s\nIt has to be cleared manually for now", i.TempPath)
 	}
 
 	if err := i.createTempPath(); err != nil {
@@ -145,7 +125,7 @@ func (i *PackkerInput) validate() error {
 	}
 
 	if !(i.assetExists()) {
-		return fmt.Errorf("Could not find the asset here %s, either user does not permission or wrong path specified", i.AssetPath)
+		return fmt.Errorf("could not find the asset here %s, either user does not permission or wrong path specified", i.AssetPath)
 	}
 
 	targetPath, err := filepath.Abs(fmt.Sprintf("%s/%s", path.Dir(i.TempPath), i.nameForTemp()))
@@ -301,7 +281,7 @@ func (i *PackkerInput) cleanMess() {
 	fmt.Println(ui.Info("Cleaning the mess created while packing the asset\n"))
 	err := os.RemoveAll(i.TempPath)
 	if err != nil {
-		fmt.Println(ui.Error(fmt.Sprintf("Oops..! an error occured while cleaning the mess at %s, you have to clear it before next run", i.TempPath)))
+		fmt.Println(ui.Error(fmt.Sprintf("Oops..! an error occurred while cleaning the mess at %s, you have to clear it before next run", i.TempPath)))
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 		os.Exit(1)
 	}

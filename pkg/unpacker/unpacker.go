@@ -71,10 +71,10 @@ func (i *UnPackkerInput) validate() error {
 
 	stub, err := os.Stat(i.StubPath)
 	if err != nil {
-		return fmt.Errorf("Unable to find the Stub at specified location")
+		return fmt.Errorf("unable to find the Stub at specified location")
 	}
 	if stub.IsDir() {
-		return fmt.Errorf("Stub/Asset cannot be directory")
+		return fmt.Errorf("stub/asset cannot be directory")
 	}
 
 	if err := i.initBackend(); err != nil {
@@ -149,11 +149,11 @@ func (i *UnPackkerInput) unpackAsset() error {
 			return fmt.Errorf(string(output))
 		}
 		if err != nil {
-			return fmt.Errorf("Oops..! an error occured while unpacking %v", err)
+			return fmt.Errorf("oops..! an error occurred while unpacking %v", err)
 		}
 		return nil
 	}
-	return fmt.Errorf("Oops..! an error occured while unpacking asset")
+	return fmt.Errorf("oops..! an error occurred while unpacking asset")
 }
 
 func (i *UnPackkerInput) fetchAssetVersion() error {
@@ -175,7 +175,7 @@ func (i *UnPackkerInput) fetchAssetVersion() error {
 		i.version = string(output)
 		return nil
 	}
-	return fmt.Errorf("Oops..! an error occured while fetching version of asset")
+	return fmt.Errorf("oops..! an error occurred while fetching version of asset")
 }
 
 func (i *UnPackkerInput) getRootCmd() *unexec.ExecCmd {
@@ -191,7 +191,7 @@ func (i *UnPackkerInput) cleanClientStub() {
 		fmt.Println(ui.Info("Cleaning the client stub is initiated as unpack is successful\n"))
 		err := os.RemoveAll(i.AssetBackend.TargetPath)
 		if err != nil {
-			fmt.Println(ui.Error(fmt.Sprintf("Oops..! an error occured while cleaning the mess at %s, you have to clear it before next run", i.AssetBackend.TargetPath)))
+			fmt.Println(ui.Error(fmt.Sprintf("Oops..! an error occurred while cleaning the mess at %s, clear it manually before next run", i.AssetBackend.TargetPath)))
 			fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 			os.Exit(1)
 		}

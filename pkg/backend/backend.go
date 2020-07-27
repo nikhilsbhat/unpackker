@@ -33,7 +33,7 @@ func (b *Store) Backend() error {
 		b.TargetPath = path
 		return nil
 	}
-	return fmt.Errorf("Currently we support only filesystem")
+	return fmt.Errorf("currently we support only filesystem")
 }
 
 // StoreAsset stores the packed asset at specified location

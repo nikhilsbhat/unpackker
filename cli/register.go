@@ -9,22 +9,16 @@ import (
 )
 
 var (
-	cmds    map[string]*cobra.Command
+	// cmds    map[string]*cobra.Command
 	unpcker = packer.NewConfig()
 )
 
-type confcmds struct {
-	commands []*cobra.Command
-}
-
 // SetUnpackkerCmds helps in gathering all the subcommands so that it can be used while registering it with main command.
 func SetUnpackkerCmds() *cobra.Command {
-	cmd := getUnpackkerCmds()
-	return cmd
+	return getUnpackkerCmds()
 }
 
 func getUnpackkerCmds() *cobra.Command {
-
 	var unpackkerCmd = &cobra.Command{
 		Use:   "unpackker [command]",
 		Short: "Command creates and ship the asset",

@@ -84,7 +84,7 @@ func decodeConfig(rawConfig []byte, filetype string) (*PackkerInput, error) {
 		}
 		return config, nil
 	}
-	return nil, fmt.Errorf("Failed to decode config, config file format not supported, supported types are: %s", configPathExt)
+	return nil, fmt.Errorf("failed to decode config, config file format not supported, supported types are: %s", configPathExt)
 }
 
 func mapConfigFile(filePath string) (string, bool) {

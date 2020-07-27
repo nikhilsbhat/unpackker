@@ -4,7 +4,6 @@ package gen
 import (
 	"fmt"
 	"html/template"
-	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -27,8 +26,8 @@ type GenInput struct {
 	TemplateRaw UnpackkerTemplate
 	// AutoGenMessage will be configured by unpackker and cannot be overwritten.
 	AutoGenMessage string
-	writer         io.Writer
-	template       string
+	// writer         io.Writer
+	template string
 }
 
 // UnpackkerTemplate are the collections of go-templates which are used to generate ClientStub of UnPackker.
@@ -304,7 +303,6 @@ var autoGenMessage = `// -------------------------------------------------------
 
 // Generate generates the client stub of asset which could be transported easily and is understood by unpackker itself.
 func (i *GenInput) Generate() (string, error) {
-
 	i.getTemplate()
 
 	path, err := i.getPath()
@@ -316,7 +314,7 @@ func (i *GenInput) Generate() (string, error) {
 	i.template = fmt.Sprintf("unpackker-client-stub-%s", i.Package)
 	i.AutoGenMessage = autoGenMessage
 	if i.clinetStubExists() {
-		return "", fmt.Errorf("Looks like clinet stub %s was created earlier in the location %s", i.template, i.Path)
+		return "", fmt.Errorf("looks like clinet stub %s was created earlier in the location %s", i.template, i.Path)
 	}
 
 	// Generating the ClientStub for asset ex: unpackker-client-stub-demo
@@ -386,7 +384,7 @@ func (i *GenInput) genPackkerClientStubFiles(name, path string) error {
 			}
 			return nil
 		}
-		return fmt.Errorf("Template not found for main.go")
+		return fmt.Errorf("template not found for main.go")
 	case "cli.go":
 		if len(i.TemplateRaw.CliTemp) != 0 {
 			tmpl = template.Must(template.New(name).Funcs(funcMap).Parse(i.TemplateRaw.CliTemp))
@@ -395,7 +393,7 @@ func (i *GenInput) genPackkerClientStubFiles(name, path string) error {
 			}
 			return nil
 		}
-		return fmt.Errorf("Template not found for cli.go")
+		return fmt.Errorf("template not found for cli.go")
 	case "climeta.go":
 		if len(i.TemplateRaw.CliMetaTemp) != 0 {
 			tmpl = template.Must(template.New(name).Funcs(funcMap).Parse(i.TemplateRaw.CliMetaTemp))
@@ -404,7 +402,7 @@ func (i *GenInput) genPackkerClientStubFiles(name, path string) error {
 			}
 			return nil
 		}
-		return fmt.Errorf("Template not found for climeta.go")
+		return fmt.Errorf("template not found for climeta.go")
 	case "flags.go":
 		if len(i.TemplateRaw.FlagsTemp) != 0 {
 			tmpl = template.Must(template.New(name).Funcs(funcMap).Parse(i.TemplateRaw.FlagsTemp))
@@ -413,7 +411,7 @@ func (i *GenInput) genPackkerClientStubFiles(name, path string) error {
 			}
 			return nil
 		}
-		return fmt.Errorf("Template not found for flags.go")
+		return fmt.Errorf("template not found for flags.go")
 	case "register.go":
 		if len(i.TemplateRaw.RegisterTemp) != 0 {
 			tmpl = template.Must(template.New(name).Funcs(funcMap).Parse(i.TemplateRaw.RegisterTemp))
@@ -422,9 +420,9 @@ func (i *GenInput) genPackkerClientStubFiles(name, path string) error {
 			}
 			return nil
 		}
-		return fmt.Errorf("Template not found for register.go")
+		return fmt.Errorf("template not found for register.go")
 	}
-	return fmt.Errorf("Snap.....!! Unable to render the templates, looks like they have issues")
+	return fmt.Errorf("snap.....!! unable to render the templates, looks like they have issues")
 }
 
 // Set the templates to defaults if not specified.

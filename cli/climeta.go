@@ -15,8 +15,6 @@ var (
 )
 
 func init() {
-
 	nui := ui.NeuronUi{&ui.UiWriter{os.Stdout}}
 	cm = &cliMeta{&nui}
-
 }
