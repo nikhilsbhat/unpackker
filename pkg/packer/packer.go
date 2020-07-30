@@ -184,7 +184,7 @@ func (i *PackkerInput) generateDefaults() {
 	}
 	if i.Backend == nil {
 		newbackend := backend.New()
-		newbackend.Type = "fs"
+		newbackend.Cloud = "fs"
 		i.Backend = newbackend
 	}
 }

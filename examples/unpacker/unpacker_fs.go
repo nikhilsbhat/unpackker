@@ -17,7 +17,7 @@ func main() {
 
 	backend := backend.New()
 	// Type is not required field, if not specified it uses type 'fs' by default.
-	backend.Type = "fs"
+	backend.Cloud = "fs"
 	//backend.TargetPath = "testing/compose_1_0"
 
 	unpackConfig.AssetBackend = backend
