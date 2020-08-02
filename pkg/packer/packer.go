@@ -150,7 +150,7 @@ func (i *PackkerInput) validate() error {
 }
 
 func (i *PackkerInput) initBackend() error {
-	if err := i.Backend.Backend(); err != nil {
+	if err := i.Backend.InitBackend(); err != nil {
 		return err
 	}
 	if len(i.Backend.TargetPath) == 0 {
@@ -184,7 +184,7 @@ func (i *PackkerInput) generateDefaults() {
 	}
 	if i.Backend == nil {
 		newbackend := backend.New()
-		newbackend.Type = "fs"
+		newbackend.Cloud = "fs"
 		i.Backend = newbackend
 	}
 }
