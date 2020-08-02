@@ -244,11 +244,12 @@ func (i *genInput) generate(cmd *cobra.Command, args []string) {
 	i.assetPath = path.Join(i.path, i.assetName, i.version)
 
 	if i.assetExists() {
-		fmt.Println(ui.Error(fmt.Sprintf("Asset %s was already created in the location %s\n", i.assetName, i.path)))
+		fmt.Println(ui.Error(fmt.Sprintf("Asset %s of version %s was already unpacked at %s", i.assetName, assetVersion, i.path)))
 		os.Exit(1)
 	}
 
 	i.path = i.getPath()
+	fmt.Println(ui.Info("unpacking the asset under"), i.assetPath)
 	assests := AssetNames()
 	for _, asst := range assests {
 		if err := RestoreAssets(i.assetPath, asst); err != nil {

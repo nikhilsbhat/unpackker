@@ -44,11 +44,12 @@ func (i *UnPackkerInput) Unpacker() error {
 		return err
 	}
 
-	i.cmd = i.getRootCmd()
-
 	if err := i.fetchAsset(); err != nil {
 		return err
 	}
+
+	i.TargetPath = i.getAssetPath(i.AssetBackend.TargetPath)
+	i.cmd = i.getRootCmd()
 
 	if err := i.unpackAsset(); err != nil {
 		return err
@@ -70,12 +71,14 @@ func (i *UnPackkerInput) validate() error {
 		return err
 	}
 
-	stub, err := os.Stat(i.StubPath)
-	if err != nil {
-		return fmt.Errorf("unable to find the Stub at specified location")
-	}
-	if stub.IsDir() {
-		return fmt.Errorf("stub/asset cannot be directory")
+	if len(i.StubPath) != 0 {
+		stub, err := os.Stat(i.StubPath)
+		if err != nil {
+			return fmt.Errorf("unable to find the Stub at specified location")
+		}
+		if stub.IsDir() {
+			return fmt.Errorf("stub/asset cannot be directory")
+		}
 	}
 
 	if err := i.initBackend(); err != nil {
@@ -90,6 +93,9 @@ func (i *UnPackkerInput) generateDefaults() {
 	}
 	if len(i.TargetPath) == 0 {
 		i.TargetPath = "."
+	}
+	if len(i.AssetBackend.Cloud) == 0 {
+		i.AssetBackend.Cloud = "fs"
 	}
 }
 
@@ -115,7 +121,7 @@ func (i *UnPackkerInput) initBackend() error {
 		i.AssetBackend.TargetPath = i.StubPath
 		return nil
 	}
-	if err := i.AssetBackend.Backend(); err != nil {
+	if err := i.AssetBackend.InitBackend(); err != nil {
 		return err
 	}
 	if len(i.AssetBackend.TargetPath) == 0 {
@@ -138,7 +144,8 @@ func (i *UnPackkerInput) fetchAsset() error {
 
 func (i *UnPackkerInput) unpackAsset() error {
 	if i.cmd != nil {
-		args := append(i.cmd.Args, "generate", "--path", i.TargetPath)
+		fmt.Println(path.Dir(i.TargetPath))
+		args := append(i.cmd.Args, "generate", "--path", path.Dir(i.TargetPath))
 		newCmd := i.cmd
 		newCmd.Args = args
 		cmd, err := newCmd.GetCmdExec()
@@ -181,6 +188,7 @@ func (i *UnPackkerInput) fetchAssetVersion() error {
 
 func (i *UnPackkerInput) getRootCmd() *unexec.ExecCmd {
 	exe := new(unexec.ExecCmd)
+	fmt.Println(i.AssetBackend.TargetPath)
 	exe.Command = i.AssetBackend.TargetPath
 	exe.Args = []string{"generate"}
 	//exe.Writer = i.Writer

@@ -3,13 +3,6 @@ package backend
 import (
 	"fmt"
 	"strings"
-
-	"gocloud.dev/blob"
-
-	// Blank import is being made so that this library can connect to multiple cloud  if required.
-	_ "gocloud.dev/blob/azureblob"
-	_ "gocloud.dev/blob/gcsblob"
-	_ "gocloud.dev/blob/s3blob"
 )
 
 var (
@@ -18,53 +11,85 @@ var (
 )
 
 // ConnectBucket will establish connection to the bucket of appropriate cloud so that the content can be accessed.
-func (b *Store) ConnectBucket() (*blob.Bucket, error) {
-	if err := b.ValidateBucketURL(); err != nil {
-		return nil, err
-	}
-
-	bucket, err := blob.OpenBucket(b.ctx, b.Bucket)
-	if err != nil {
-		return nil, fmt.Errorf("could not open bucket: %v", err)
-	}
-	fmt.Println(bucket)
-	return bucket, nil
-}
-
-// ReadBucket reads through the configured bucket.
-func (b *Store) ReadBucket() error {
-	if err := b.ValidateBucketURL(); err != nil {
+func (b *Store) connectBucket() error {
+	if err := b.validateBucketURL(); err != nil {
 		return err
 	}
-	r, err := b.blobConn.NewReader(b.ctx, "foo.txt", nil)
-	if err != nil {
-		return err
+
+	if b.Cloud == "gcp" {
+		if err := b.gcpCreds.connectBucket(b.Bucket, b.Name); err != nil {
+			return nil
+		}
+	} else if b.Cloud == "aws" {
+		if err := b.awsCreds.connectBucket(b.Bucket, b.Name); err != nil {
+			return nil
+		}
+	} else if b.Cloud == "azure" {
+		return nil
 	}
-	defer r.Close()
 	return nil
 }
 
-// CopyBucketContent either downloads or uploads the asset to specified cloud.
-func (b *Store) CopyBucketContent() error {
-	if err := b.ValidateBucketURL(); err != nil {
+// // ReadBucket reads through the configured bucket.
+// func (b *Store) readBucket() error {
+// 	if err := b.validateBucketURL(); err != nil {
+// 		return err
+// 	}
+// 	// r, err := b.blobConn.NewReader(b.ctx, "foo.txt", nil)
+// 	// if err != nil {
+// 	// 	return err
+// 	// }
+// 	// defer r.Close()
+// 	// return nil
+// 	return nil
+// }
+
+// storeAsset downloads the asset from specified cloud.
+func (b *Store) storeAsset() error {
+	if err := b.validateBucketURL(); err != nil {
 		return err
 	}
 
-	if err := b.blobConn.Copy(b.ctx, b.TargetPath, b.sourcePath, &blob.CopyOptions{}); err != nil {
+	if b.Cloud == "gcp" {
+		if err := b.gcpCreds.storeAsset(b.Path); err != nil {
+			return nil
+		}
+	} else if b.Cloud == "aws" {
+		if err := b.awsCreds.storeAsset(b.Path); err != nil {
+			return nil
+		}
+	} else if b.Cloud == "azure" {
+		return nil
+	}
+
+	return nil
+}
+
+// fetchAsset downloads the asset from specified cloud.
+func (b *Store) fetchAsset() error {
+	if err := b.validateBucketURL(); err != nil {
 		return err
 	}
-	defer b.blobConn.Close()
+
+	if b.Cloud == "gcp" {
+		if err := b.gcpCreds.fetchAsset(b.TargetPath); err != nil {
+			return nil
+		}
+	} else if b.Cloud == "aws" {
+		if err := b.awsCreds.fetchAsset(b.TargetPath); err != nil {
+			return nil
+		}
+	} else if b.Cloud == "azure" {
+		return nil
+	}
+
 	return nil
 }
 
 // ValidateBucketURL validates the bucket passed to Unpackker.
-func (b *Store) ValidateBucketURL() error {
+func (b *Store) validateBucketURL() error {
 	if !b.validateCloud() {
 		return fmt.Errorf("at the moment unpackker does not support backend for the cloud %s configured", b.Cloud)
-	}
-
-	if !b.validateURL(b.Bucket) {
-		b.createBucketURL()
 	}
 	return nil
 }
@@ -83,7 +108,7 @@ func (b *Store) createBucketURL() {
 }
 
 func (b *Store) validateURL(url string) bool {
-	if strings.HasPrefix(b.Bucket, bucketPrefix[b.Bucket]) {
+	if strings.HasPrefix(b.Bucket, bucketPrefix[b.Cloud]) {
 		return true
 	}
 	return false
