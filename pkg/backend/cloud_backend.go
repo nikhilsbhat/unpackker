@@ -11,12 +11,28 @@ import (
 // bucketOpts implements various operations on cloud
 type bucketOpts interface {
 	getClient() error
+	objectExists() error
 	connectBucket() error
 	fetchAsset() error
 	storeAsset() error
 }
 
 // Operations related to cloud gcp
+
+func (c *gcpCredentials) objectExists(bucket, object string) (bool, error) {
+	if c.gcpClient == nil {
+		return false, fmt.Errorf("unable to connect to bucket, gcp client not found")
+	}
+
+	attrs, err := c.gcpClient.Bucket(bucket).Object(object).Attrs(c.ctx)
+	if err != nil {
+		return false, err
+	}
+	if attrs.Name == object {
+		return true, nil
+	}
+	return false, nil
+}
 
 // connectBucket establishes connection to GCS bucket
 func (c *gcpCredentials) connectBucket(bucket string, object string) error {
@@ -95,6 +111,10 @@ func (c *gcpCredentials) storeAsset(path string) error {
 }
 
 // Operations related to cloud aws
+
+func (c *awsCredentials) objectExists(bucket, object string) (bool, error) {
+	return false, nil
+}
 
 // connectBucket establishes connection to S3 bucket
 func (c *awsCredentials) connectBucket(bucket string, object string) error {

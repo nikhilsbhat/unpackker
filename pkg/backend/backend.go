@@ -4,10 +4,12 @@ package backend
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	"cloud.google.com/go/storage"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/nikhilsbhat/neuron/cli/ui"
 )
 
 // Store helps one to specify where the artifact should be tranported, default to local.
@@ -18,6 +20,8 @@ type Store struct {
 	Cloud string `json:"cloud" yaml:"cloud"`
 	// Bucket name in appropriate cloud for asset store.
 	Bucket string `json:"bucket" yaml:"bucket"`
+	// Folder under which the asset has to be placed.
+	Folder string `json:"folder" yaml:"folder"`
 	// Path to the asset which has to be store on to cloud.
 	Path string `json:"path" yaml:"path"`
 	// TargetPath refers to path where the asset has to be fetched to.
@@ -81,7 +85,29 @@ func (b *Store) StoreAsset() error {
 	if b.Cloud == "fs" {
 		return nil
 	}
-	return fmt.Errorf("at the moment we do not support storing asset on cloud")
+
+	b.Name = filepath.Join(b.Folder, b.Name)
+	if err := b.connectBucket(); err != nil {
+		return err
+	}
+
+	object, err := b.objectExists()
+	if err != nil {
+		if err == storage.ErrObjectNotExist {
+			fmt.Println(ui.Info("Looks like object is not present we are creating one\n"))
+		} else {
+			return err
+		}
+	}
+	if object {
+		return fmt.Errorf("asset with current version already exists at the backend %s", b.Name)
+	}
+
+	if err := b.storeAsset(); err != nil {
+		return err
+	}
+	fmt.Println(ui.Info("Asset was stored to specified backend successfully\n"))
+	return nil
 }
 
 // FetchAsset stores the packed asset at specified location.
