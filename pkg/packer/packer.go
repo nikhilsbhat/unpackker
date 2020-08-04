@@ -104,18 +104,21 @@ func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 
 	fmt.Println(ui.Info("Prerequisites for Asset packing is completed successfully\n"))
 
-	if err := configFromFile.storeAsset(); err != nil {
-		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
-		configFromFile.cleanMess()
-		os.Exit(1)
-	}
-
 	if err := configFromFile.packAsset(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 		configFromFile.cleanMess()
 		os.Exit(1)
 	}
 	fmt.Println(ui.Info("Asset was packed successfully\n"))
+
+	fmt.Println(ui.Info("Storing packed asset onto the specified backend\n"))
+	if err := configFromFile.storeAsset(); err != nil {
+		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		configFromFile.cleanMess()
+		os.Exit(1)
+	}
+	fmt.Println(ui.Info("Asset was stored successfully, it should be available in the backed configured\n"))
+
 	configFromFile.cleanMess()
 }
 
@@ -125,7 +128,7 @@ func (i *PackkerInput) validate() error {
 	i.TempPath = i.getTempPath() + "_temp"
 
 	if i.tempPathExists() {
-		return fmt.Errorf("looks like Unpackker was exited abruptly which left behind few traces at %s\nIt has to be cleared manually for now", i.TempPath)
+		return fmt.Errorf("looks like Unpackker was exited abruptly which left behind few traces at %s\nIt will be cleared now", i.TempPath)
 	}
 
 	if err := i.createTempPath(); err != nil {
@@ -153,13 +156,21 @@ func (i *PackkerInput) initBackend() error {
 	if err := i.Backend.InitBackend(); err != nil {
 		return err
 	}
-	if len(i.Backend.TargetPath) == 0 {
-		i.Backend.TargetPath = i.targetPath
+	if i.Backend == nil {
+		i.Backend = backend.New()
+	}
+	if len(i.Backend.Path) == 0 {
+		i.Backend.Path = i.targetPath
+	}
+	if len(i.Backend.Name) == 0 {
+		i.Backend.Name = i.Name
 	}
 	return nil
 }
 
 func (i *PackkerInput) storeAsset() error {
+	i.Backend.Folder = filepath.ToSlash(filepath.Join(i.Backend.Folder, i.Backend.Name))
+	i.Backend.Name = i.nameForTemp()
 	if err := i.Backend.StoreAsset(); err != nil {
 		return err
 	}
@@ -205,7 +216,7 @@ func (i *PackkerInput) setupAssetDir() error {
 }
 
 func (i *PackkerInput) packAsset() error {
-	goBuild := exec.Command("go", "build", "-o", i.Backend.TargetPath, "-ldflags", "-s -w")
+	goBuild := exec.Command("go", "build", "-o", i.Backend.Path, "-ldflags", "-s -w")
 	goBuild.Dir = i.clinetStubPath
 
 	if err := goBuild.Run(); err != nil {
@@ -294,9 +305,9 @@ func (i *PackkerInput) cleanMess() {
 	fmt.Println(ui.Info("Cleaning the mess created while packing the asset\n"))
 	err := os.RemoveAll(i.TempPath)
 	if err != nil {
-		fmt.Println(ui.Error(fmt.Sprintf("Oops..! an error occurred while cleaning the mess at %s, you have to clear it before next run", i.TempPath)))
+		fmt.Println(ui.Error(fmt.Sprintf("oops..! an error occurred while cleaning the traces at %s, you have to clear it before next run", i.TempPath)))
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 		os.Exit(1)
 	}
-	fmt.Println(ui.Info("All files and folders created by Unpaccker in the process of packing asset was cleared\n"))
+	fmt.Println(ui.Info("All files and folders created by Unpaccker in the process of packing asset was cleared successfully\n"))
 }

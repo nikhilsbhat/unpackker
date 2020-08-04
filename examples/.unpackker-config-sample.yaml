@@ -1,11 +1,14 @@
 ---
-name: compose
+name: compose                         # name of the asset (version would be upended once the asset is generated. Ex: for name unpacker and version 0.1.0, the end artifact would be unpacker_0_1_0)
 tempath: test/
-path: testing
-assetpath: /Users/nikhil.bhat/my-opensource/vue/sampleapp/dist
-assetversion: "1.1"
-environment: "production"
+path: testing                         # path which unpackker has to pick for its operations while packing, it defaults to working directory
+assetpath: path/to/asset              # path to assert dir which has to be packed.
+assetversion: "0.1.1"                 # version of the asset that would be packed.
+environment: "production"             # name of environment in which the asset has to be packed.
 #configpath: ~/vue/sampleapp/dist
 backend:
-  cloud: fs
-  bucket: ~/my-opensource/project-packer
+  cloud: "gcp"                        # name of the cloud as preferred backend if not specified defaults to fs, available options are (fs, gcp, aws, azure).
+  bucket: bucket_name                 # name of root bucket.
+  folder: past/to/folder              # path of the folders under root bucket if any.
+  credspath: path/to/credentials_file # credentails.json incase of gcp
+  credstype: "file"                   # credstype is not required field, if not specified it sets to default, available options are (file, default).

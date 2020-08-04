@@ -30,6 +30,24 @@ func (b *Store) connectBucket() error {
 	return nil
 }
 
+func (b *Store) objectExists() (bool, error) {
+	if err := b.validateBucketURL(); err != nil {
+		return false, err
+	}
+
+	// This verifies if root object exists.
+	if b.Cloud == "gcp" {
+		exists, err := b.gcpCreds.objectExists(b.Bucket, b.Name)
+		return exists, err
+	} else if b.Cloud == "aws" {
+		exists, err := b.awsCreds.objectExists(b.Bucket, b.Name)
+		return exists, err
+	} else if b.Cloud == "azure" {
+		return false, nil
+	}
+	return false, nil
+}
+
 // // ReadBucket reads through the configured bucket.
 // func (b *Store) readBucket() error {
 // 	if err := b.validateBucketURL(); err != nil {
@@ -52,11 +70,11 @@ func (b *Store) storeAsset() error {
 
 	if b.Cloud == "gcp" {
 		if err := b.gcpCreds.storeAsset(b.Path); err != nil {
-			return nil
+			return err
 		}
 	} else if b.Cloud == "aws" {
 		if err := b.awsCreds.storeAsset(b.Path); err != nil {
-			return nil
+			return err
 		}
 	} else if b.Cloud == "azure" {
 		return nil
@@ -73,11 +91,11 @@ func (b *Store) fetchAsset() error {
 
 	if b.Cloud == "gcp" {
 		if err := b.gcpCreds.fetchAsset(b.TargetPath); err != nil {
-			return nil
+			return err
 		}
 	} else if b.Cloud == "aws" {
 		if err := b.awsCreds.fetchAsset(b.TargetPath); err != nil {
-			return nil
+			return err
 		}
 	} else if b.Cloud == "azure" {
 		return nil

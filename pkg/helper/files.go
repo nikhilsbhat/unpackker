@@ -2,6 +2,7 @@
 package helper
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -23,6 +24,11 @@ func Statfile(path string) bool {
 	return false
 }
 
+// DirectorizePath returns the path equivalent of the passed string.
+func DirectorizePath(name string) string {
+	return fmt.Sprintf("%s/", name)
+}
+
 // CreateFile creates the file with execution permission and it is required to execute the client stub of Unpackker.
 func CreateFile(name string) (*os.File, error) {
 	if !Statfile(filepath.Dir(name)) {
@@ -40,7 +46,7 @@ func CreateFile(name string) (*os.File, error) {
 
 // OpenFile opens the file so that the data of it can ne read.
 func OpenFile(name string) (*os.File, error) {
-	file, err := os.Open("notes.txt")
+	file, err := os.Open(name)
 	if err != nil {
 		return nil, err
 	}
