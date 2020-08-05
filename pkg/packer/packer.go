@@ -37,6 +37,9 @@ type PackkerInput struct {
 	Backend *backend.Store `json:"backend" yaml:"backend"`
 	// ConfigPath refers to file path where the config file lies, defaults to PWD.
 	ConfigPath string `json:"configpath" yaml:"configpath"`
+	// CleanLocalCache clears the local cache creted under PackkerInput.Path if enabled,
+	// this will be effective only if backend is type 'fs'.
+	CleanLocalCache bool `json:"cleancache" yaml:"cleancache"`
 	// targetPath refers to path where the packed asset has to be placed.
 	targetPath     string
 	clinetStubPath string
@@ -53,8 +56,8 @@ func NewConfig() *PackkerInput {
 func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 	configFromFile, err := i.LoadConfig()
 	if err != nil {
-		fmt.Println(ui.Warn(decode.GetStringOfMessage(err) + "\n"))
-		fmt.Println(ui.Warn("Switching to default config"))
+		fmt.Println(ui.Error(decode.GetStringOfMessage(err) + "\n"))
+		os.Exit(1)
 	}
 
 	if configFromFile != nil {
@@ -109,7 +112,8 @@ func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 		configFromFile.cleanMess()
 		os.Exit(1)
 	}
-	fmt.Println(ui.Info("Asset was packed successfully\n"))
+
+	fmt.Println(ui.Warn(configFromFile.nameForTemp()), ui.Info(" was packed successfully\n"))
 
 	fmt.Println(ui.Info("Storing packed asset onto the specified backend\n"))
 	if err := configFromFile.storeAsset(); err != nil {
@@ -305,9 +309,22 @@ func (i *PackkerInput) cleanMess() {
 	fmt.Println(ui.Info("Cleaning the mess created while packing the asset\n"))
 	err := os.RemoveAll(i.TempPath)
 	if err != nil {
-		fmt.Println(ui.Error(fmt.Sprintf("oops..! an error occurred while cleaning the traces at %s, you have to clear it before next run", i.TempPath)))
-		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		fmt.Println(ui.Error(fmt.Sprintf("oops..! an error occurred while cleaning the traces at %s: %v\n, ", i.TempPath, err)))
+		fmt.Println(ui.Error("it should be to cleared manually before next run"))
 		os.Exit(1)
 	}
+	if err := i.cleanCache(); err != nil {
+		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+	}
 	fmt.Println(ui.Info("All files and folders created by Unpaccker in the process of packing asset was cleared successfully\n"))
+}
+
+func (i *PackkerInput) cleanCache() error {
+	if i.Backend.Cloud != "fs" {
+		err := os.RemoveAll(i.Path)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

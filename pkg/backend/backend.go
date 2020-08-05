@@ -100,13 +100,12 @@ func (b *Store) StoreAsset() error {
 		}
 	}
 	if object {
-		return fmt.Errorf("asset with current version already exists at the backend %s", b.Name)
+		return fmt.Errorf("asset with current version already exists at the backend as %s", b.Name)
 	}
 
 	if err := b.storeAsset(); err != nil {
 		return err
 	}
-	fmt.Println(ui.Info("Asset was stored to specified backend successfully\n"))
 	return nil
 }
 
