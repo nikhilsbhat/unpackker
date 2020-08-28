@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/go-bindata/go-bindata/v3"
@@ -32,6 +33,8 @@ type PackkerInput struct {
 	AssetMetaData map[string]string `json:"assetmetadata" yaml:"assetmetadata"`
 	// Path defines where the packed asset has to be placed.
 	Path string `json:"path" yaml:"path"`
+	// IgnoreFiles are regexes of the files that should be avided.
+	IgnoreFiles []string `json:"ignore" yaml:"ignore"`
 	// Environment in which the asset is packed.
 	Environment string `json:"environment" yaml:"environment"`
 	// AssetVersion refers to version of asset which has to eb packed.
@@ -45,6 +48,7 @@ type PackkerInput struct {
 	CleanLocalCache bool `json:"cleancache" yaml:"cleancache"`
 	// targetPath refers to path where the packed asset has to be placed.
 	targetPath     string
+	filesToIgnore  []*regexp.Regexp
 	clinetStubPath string
 	gen.GenInput
 	// writer   io.Writer
@@ -208,6 +212,14 @@ func (i *PackkerInput) generateDefaults() {
 		newbackend.Cloud = "fs"
 		i.Backend = newbackend
 	}
+
+	if len(i.IgnoreFiles) != 0 {
+		patterns := make([]*regexp.Regexp, 0)
+		for _, pattern := range i.IgnoreFiles {
+			patterns = append(patterns, regexp.MustCompile(pattern))
+		}
+		i.filesToIgnore = patterns
+	}
 }
 
 func (i *PackkerInput) setupAssetDir() error {
@@ -294,6 +306,7 @@ func (i *PackkerInput) tempPathExists() bool {
 func (i *PackkerInput) buildAsset() error {
 	cfg := bindata.NewConfig()
 
+	cfg.Ignore = i.filesToIgnore
 	cfg.Prefix = helper.SplitBasePath(i.AssetPath, "base")
 	cfg.Output = filepath.Join(i.clinetStubPath, i.Name, helper.SplitBasePath(i.clinetStubPath)+".go")
 	cfg.Package = i.Name
@@ -313,7 +326,7 @@ func (i *PackkerInput) buildAsset() error {
 
 func (i *PackkerInput) cleanMess() {
 	if !i.CleanLocalCache {
-		fmt.Println(ui.Warn("Skipping cleaning, as cleancache is disabled. Make sure to clean it manually before next run\n"))
+		fmt.Println(ui.Warn("Cleaning traces was skipped, as cleancache is disabled. Make sure to clean it manually before next run\n"))
 		os.Exit(1)
 	}
 
