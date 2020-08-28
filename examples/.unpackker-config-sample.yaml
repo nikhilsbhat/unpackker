@@ -5,6 +5,12 @@ path: testing                         # path which unpackker has to pick for its
 assetpath: path/to/asset              # path to assert dir which has to be packed.
 assetversion: "0.1.1"                 # version of the asset that would be packed.
 environment: "production"             # name of environment in which the asset has to be packed.
+ignore:                               # list of files to be ignore while packing asset.
+  - "path/to/exemptfile1"
+  - "path/to/exemptfile2"
+assetmetadata:                        # metadata to be assigned to the asset.
+  unpackkerpacked: true
+cleancache: true                      # if cleancache is enabled the traces which were created while packing asset would be cleared.
 #configpath: ~/vue/sampleapp/dist
 backend:
   cloud: "gcp"                        # name of the cloud as preferred backend if not specified defaults to fs, available options are (fs, gcp, aws, azure).
