@@ -69,11 +69,11 @@ func (b *Store) storeAsset() error {
 	}
 
 	if b.Cloud == "gcp" {
-		if err := b.gcpCreds.storeAsset(b.Path); err != nil {
+		if err := b.gcpCreds.storeAsset(b.Path, b.MetaData); err != nil {
 			return err
 		}
 	} else if b.Cloud == "aws" {
-		if err := b.awsCreds.storeAsset(b.Path); err != nil {
+		if err := b.awsCreds.storeAsset(b.Path, b.MetaData); err != nil {
 			return err
 		}
 	} else if b.Cloud == "azure" {

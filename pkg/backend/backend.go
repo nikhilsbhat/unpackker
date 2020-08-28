@@ -32,7 +32,9 @@ type Store struct {
 	// It deafults to default config.
 	CredentialType string `json:"credstype" yaml:"credstype"`
 	// Region where the bucket resides.
-	Region     string `json:"region" yaml:"region"`
+	Region string `json:"region" yaml:"region"`
+	// Metadata of the asset that would be stored.
+	MetaData   map[string]string `json:"metadata" yaml:"metadata"`
 	sourcePath string
 	gcpCreds   *gcpCredentials
 	awsCreds   *awsCredentials

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 
+	"cloud.google.com/go/storage"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/nikhilsbhat/unpackker/pkg/helper"
 )
@@ -80,7 +81,7 @@ func (c *gcpCredentials) fetchAsset(path string) error {
 }
 
 // storeAsset makes sure that that the asset is stored to specified GCS bucket.
-func (c *gcpCredentials) storeAsset(path string) error {
+func (c *gcpCredentials) storeAsset(path string, meta map[string]string) error {
 	if c.gcpBlobConn == nil {
 		return fmt.Errorf("unable to store asset, connection to bucket was not established")
 	}
@@ -102,6 +103,11 @@ func (c *gcpCredentials) storeAsset(path string) error {
 
 	if err := wc.Close(); err != nil {
 		return fmt.Errorf("Writer.Close: %v", err)
+	}
+
+	_, err = c.gcpBlobConn.Update(c.ctx, storage.ObjectAttrsToUpdate{Metadata: meta})
+	if err != nil {
+		return err
 	}
 
 	if err := asset.Close(); err != nil {
@@ -135,6 +141,6 @@ func (c *awsCredentials) fetchAsset(path string) error {
 }
 
 // storeAsset makes sure that the asset is stored to specified S3 bucket.
-func (c *awsCredentials) storeAsset(path string) error {
+func (c *awsCredentials) storeAsset(path string, meta map[string]string) error {
 	return nil
 }

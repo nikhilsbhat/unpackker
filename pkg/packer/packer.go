@@ -27,6 +27,9 @@ type PackkerInput struct {
 	TempPath string `json:"tempath" yaml:"tempath"`
 	// Path to asset which has to be packed.
 	AssetPath string `json:"assetpath" yaml:"assetpath"`
+	// AssetMetaData is set of metadata that has to be applied to the asset.
+	// This value can be used while unpacking or for any future requirements.
+	AssetMetaData map[string]string `json:"assetmetadata" yaml:"assetmetadata"`
 	// Path defines where the packed asset has to be placed.
 	Path string `json:"path" yaml:"path"`
 	// Environment in which the asset is packed.
@@ -169,6 +172,9 @@ func (i *PackkerInput) initBackend() error {
 	if len(i.Backend.Name) == 0 {
 		i.Backend.Name = i.Name
 	}
+	if len(i.Backend.MetaData) == 0 {
+		i.Backend.MetaData = i.AssetMetaData
+	}
 	return nil
 }
 
@@ -306,6 +312,11 @@ func (i *PackkerInput) buildAsset() error {
 }
 
 func (i *PackkerInput) cleanMess() {
+	if !i.CleanLocalCache {
+		fmt.Println(ui.Warn("Skipping cleaning, as cleancache is disabled. Make sure to clean it manually before next run\n"))
+		os.Exit(1)
+	}
+
 	fmt.Println(ui.Info("Cleaning the mess created while packing the asset\n"))
 	err := os.RemoveAll(i.TempPath)
 	if err != nil {
@@ -313,6 +324,7 @@ func (i *PackkerInput) cleanMess() {
 		fmt.Println(ui.Error("it should be to cleared manually before next run"))
 		os.Exit(1)
 	}
+
 	if err := i.cleanCache(); err != nil {
 		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 	}
