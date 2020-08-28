@@ -31,6 +31,8 @@ type Store struct {
 	// CredentialType of for cloud config. Unpackker supports two type, default and file type.
 	// It deafults to default config.
 	CredentialType string `json:"credstype" yaml:"credstype"`
+	// SkipRemoteCheck would skip feature which avoids pushing asset which is present at backend.
+	SkipRemoteCheck bool `json:"skipremotecheck" yaml:"skipremotecheck"`
 	// Region where the bucket resides.
 	Region string `json:"region" yaml:"region"`
 	// Metadata of the asset that would be stored.
@@ -101,8 +103,10 @@ func (b *Store) StoreAsset() error {
 			return err
 		}
 	}
-	if object {
-		return fmt.Errorf("asset with current version already exists at the backend as %s", b.Name)
+	if b.SkipRemoteCheck {
+		if object {
+			return fmt.Errorf("asset with current version already exists at the backend as %s", b.Name)
+		}
 	}
 
 	if err := b.storeAsset(); err != nil {
