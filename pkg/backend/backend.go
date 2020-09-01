@@ -103,7 +103,7 @@ func (b *Store) StoreAsset() error {
 			return err
 		}
 	}
-	if b.SkipRemoteCheck {
+	if !b.SkipRemoteCheck {
 		if object {
 			return fmt.Errorf("asset with current version already exists at the backend as %s", b.Name)
 		}

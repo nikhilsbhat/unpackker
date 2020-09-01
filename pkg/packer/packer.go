@@ -138,6 +138,10 @@ func (i *PackkerInput) validate() error {
 	i.Path = i.getPath()
 	i.TempPath = i.getTempPath() + "_temp"
 
+	if err := i.getFilesToIgnore(); err != nil {
+		return err
+	}
+
 	if i.tempPathExists() {
 		return fmt.Errorf("looks like Unpackker was exited abruptly which left behind few traces at %s\nIt will be cleared now", i.TempPath)
 	}
@@ -161,6 +165,20 @@ func (i *PackkerInput) validate() error {
 	}
 
 	return nil
+}
+
+func (i *PackkerInput) getFilesToIgnore() error {
+	if len(i.IgnoreFiles) != 0 {
+		patterns := make([]*regexp.Regexp, 0)
+		i.IgnoreFiles = append(i.IgnoreFiles, helper.SplitBasePath(i.Path), helper.SplitBasePath(i.TempPath))
+		fmt.Println(ui.Info(fmt.Sprintf("Files that would be exempted are: %v \n", i.IgnoreFiles)))
+		for _, pattern := range i.IgnoreFiles {
+			patterns = append(patterns, regexp.MustCompile(pattern))
+		}
+		i.filesToIgnore = patterns
+		return nil
+	}
+	return fmt.Errorf("nothing to ignore, or defaults are not set right")
 }
 
 func (i *PackkerInput) initBackend() error {
@@ -213,13 +231,7 @@ func (i *PackkerInput) generateDefaults() {
 		i.Backend = newbackend
 	}
 
-	if len(i.IgnoreFiles) != 0 {
-		patterns := make([]*regexp.Regexp, 0)
-		for _, pattern := range i.IgnoreFiles {
-			patterns = append(patterns, regexp.MustCompile(pattern))
-		}
-		i.filesToIgnore = patterns
-	}
+	i.IgnoreFiles = append(i.IgnoreFiles, helper.SplitBasePath(i.ConfigPath))
 }
 
 func (i *PackkerInput) setupAssetDir() error {
