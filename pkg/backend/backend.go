@@ -29,7 +29,7 @@ type Store struct {
 	// Path to cloud credentail file, 'service-account.json' incase of gcp.
 	CredentialPath string `json:"credspath" yaml:"credspath"`
 	// CredentialType of for cloud config. Unpackker supports two type, default and file type.
-	// It deafults to default config.
+	// It defaults to default config.
 	CredentialType string `json:"credstype" yaml:"credstype"`
 	// SkipRemoteCheck would skip feature which avoids pushing asset which is present at backend.
 	SkipRemoteCheck bool `json:"skipremotecheck" yaml:"skipremotecheck"`
