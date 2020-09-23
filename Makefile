@@ -1,7 +1,8 @@
 GOFMT_FILES?=$$(find . -not -path "./vendor/*" -type f -name '*.go')
 PROJECT_NAME?=unpackker
 APP_DIR?=$$(git rev-parse --show-toplevel)
-VERSION?=0.1
+BUILD_ENVIRONMENT?=${ENVIRONMENT}
+VERSION?=0.2.0
 DEV?=${DEVBOX_TRUE}
 
 .PHONY: help
@@ -16,15 +17,15 @@ local.check: local.fmt ## Loads all the dependencies to vendor directory
 	go mod tidy
 
 local.build: local.check ## Generates the artifact with the help of 'go build'
-	go build -o $(PROJECT_NAME) -ldflags="-s -w"
+	go build -o $(PROJECT_NAME) -ldflags="-s -w -X 'github.com/nikhilsbhat/unpackker/version.Versn=${VERSION}' -X 'github.com/nikhilsbhat/unpackker/version.Env=${BUILD_ENVIRONMENT}'"
 
 local.push: local.build ## Pushes built artifact to the specified location
 
 local.run: local.build ## Generates the artifact and start the service in the current directory
 	./${PROJECT_NAME}
 
-dockerise: local.check ## Containerise the appliction
-	docker build . --tag ${DOCKER_USER}/${PROJECT_NAME}:${VERSION}
+dockerise: docker.lint docker.login ## Containerise the appliction
+	docker build --tag ${DOCKER_USER}/${PROJECT_NAME}:${VERSION} --build-arg APP_VERSION=${VERSION} --build-arg BUILD_ENVIRONMENT=${BUILD_ENVIRONMENT} .
 
 docker.lint: ## Linting Dockerfile for
 	if [ -z "${DEV}" ]; then hadolint Dockerfile ; else docker run --rm -v $(APP_DIR):/app -w /app hadolint/hadolint:latest-alpine hadolint Dockerfile ; fi
@@ -32,7 +33,7 @@ docker.lint: ## Linting Dockerfile for
 docker.login: ## Establishes the connection to the docker registry
 	docker login -u ${DOCKER_USER} -p ${DOCKER_PASSWD} ${DOCKER_REPO}
 
-docker.publish.image: docker_login ## Publisies the image to the registered docker registry.
+docker.publish.image: docker.login ## Publisies the image to the registered docker registry.
 	docker push ${DOCKER_USER}/${PROJECT_NAME}:${VERSION}
 
 coverage.lint: ## Lint's application for errors, it is a linters aggregator (https://github.com/golangci/golangci-lint).

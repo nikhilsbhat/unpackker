@@ -27,7 +27,7 @@ type PackkerInput struct {
 	// TempPath would be used to carryout all the operation of Unpackker defaults to PWD.
 	TempPath string `json:"tempath" yaml:"tempath"`
 	// Path to asset which has to be packed.
-	AssetPath string `json:"assetpath" yaml:"assetpath"`
+	AssetPath string `json:"assetpath" yaml:"assetpath" env:"UNPACKKER_ASSET_PATH"`
 	// AssetMetaData is set of metadata that has to be applied to the asset.
 	// This value can be used while unpacking or for any future requirements.
 	AssetMetaData map[string]string `json:"assetmetadata" yaml:"assetmetadata"`
@@ -36,16 +36,16 @@ type PackkerInput struct {
 	// IgnoreFiles are regexes of the files that should be avided.
 	IgnoreFiles []string `json:"ignore" yaml:"ignore"`
 	// Environment in which the asset is packed.
-	Environment string `json:"environment" yaml:"environment"`
+	Environment string `json:"environment" yaml:"environment" env:"UNPACKKER_ENVIRONMENT"`
 	// AssetVersion refers to version of asset which has to eb packed.
-	AssetVersion string `json:"assetversion" yaml:"assetversion"`
+	AssetVersion string `json:"assetversion" yaml:"assetversion" env:"UNPACKKER_ASSET_VERSION"`
 	// Backend for the asset generated.
 	Backend *backend.Store `json:"backend" yaml:"backend"`
 	// ConfigPath refers to file path where the config file lies, defaults to PWD.
-	ConfigPath string `json:"configpath" yaml:"configpath"`
+	ConfigPath string `json:"configpath" yaml:"configpath" env:"UNPACKKER_CONFIG_PATH"`
 	// CleanLocalCache clears the local cache creted under PackkerInput.Path if enabled,
 	// this will be effective only if backend is type 'fs'.
-	CleanLocalCache bool `json:"cleancache" yaml:"cleancache"`
+	CleanLocalCache bool `json:"cleancache" yaml:"cleancache" env:"UNPACKKER_CLEAN_LOCALCACHE"`
 	// targetPath refers to path where the packed asset has to be placed.
 	targetPath     string
 	filesToIgnore  []*regexp.Regexp
@@ -69,6 +69,20 @@ func (i *PackkerInput) Packer(cmd *cobra.Command, args []string) {
 
 	if configFromFile != nil {
 		if err := mergo.Merge(configFromFile, i, mergo.WithOverride); err != nil {
+			fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+			os.Exit(1)
+		}
+	}
+
+	cfg, envcfg, err := getConfigFromEnvWithValidate()
+	if err != nil {
+		fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
+		fmt.Println(ui.Warn("Dropping env variables as we ran into problem while fetching"))
+	}
+	if envcfg {
+		fmt.Println(ui.Warn("Dropping env variables as no corresponding values set"))
+	} else {
+		if err := mergo.Merge(configFromFile, cfg, mergo.WithOverride); err != nil {
 			fmt.Println(ui.Error(decode.GetStringOfMessage(err)))
 			os.Exit(1)
 		}

@@ -5,7 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/caarlos0/env/v6"
 	"github.com/nikhilsbhat/config/decode"
+	"github.com/nikhilsbhat/unpackker/pkg/backend"
 	"github.com/nikhilsbhat/unpackker/pkg/helper"
 	"gopkg.in/yaml.v2"
 )
@@ -31,6 +33,32 @@ func (i *PackkerInput) LoadConfig() (*PackkerInput, error) {
 		return nil, err
 	}
 	return newConfig, nil
+}
+
+func getConfigFromEnvWithValidate() (*PackkerInput, bool, error) {
+	newcfg := NewConfig()
+	envcfg, bck, err := getConfigFromEnv()
+	if err != nil {
+		return envcfg, false, err
+	}
+	if (envcfg == &PackkerInput{}) && (bck == &backend.Store{}) {
+		return envcfg, true, nil
+	}
+	newcfg = envcfg
+	newcfg.Backend = bck
+	return newcfg, false, nil
+}
+
+func getConfigFromEnv() (*PackkerInput, *backend.Store, error) {
+	back := backend.New()
+	if err := env.Parse(back); err != nil {
+		return nil, nil, err
+	}
+	cfg := NewConfig()
+	if err := env.Parse(cfg); err != nil {
+		return nil, nil, err
+	}
+	return cfg, back, nil
 }
 
 func (i *PackkerInput) getConfig() error {
