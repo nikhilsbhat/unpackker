@@ -27,14 +27,14 @@ type Store struct {
 	// TargetPath refers to path where the asset has to be fetched to.
 	TargetPath string `json:"targetpath" yaml:"targetpath"`
 	// Path to cloud credentail file, 'service-account.json' incase of gcp.
-	CredentialPath string `json:"credspath" yaml:"credspath"`
+	CredentialPath string `json:"credspath" yaml:"credspath" env:"UNPACKKER_CREDENTIAL_PATH"`
 	// CredentialType of for cloud config. Unpackker supports two type, default and file type.
 	// It defaults to default config.
-	CredentialType string `json:"credstype" yaml:"credstype"`
+	CredentialType string `json:"credstype" yaml:"credstype" env:"UNPACKKER_CREDENTIAL_TYPE"`
 	// SkipRemoteCheck would skip feature which avoids pushing asset which is present at backend.
 	SkipRemoteCheck bool `json:"skipremotecheck" yaml:"skipremotecheck"`
 	// Region where the bucket resides.
-	Region string `json:"region" yaml:"region"`
+	Region string `json:"region" yaml:"region" env:"UNPACKKER_CLOUD_REGION"`
 	// Metadata of the asset that would be stored.
 	MetaData   map[string]string `json:"metadata" yaml:"metadata"`
 	sourcePath string

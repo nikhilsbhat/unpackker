@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go v0.58.0 // indirect
 	cloud.google.com/go/storage v1.9.0
 	github.com/aws/aws-sdk-go v1.31.13
+	github.com/caarlos0/env/v6 v6.3.0
 	github.com/go-bindata/go-bindata/v3 v3.1.3
 	github.com/google/martian v2.1.1-0.20190517191504-25dcb96d9e51+incompatible // indirect
 	github.com/imdario/mergo v0.3.10
